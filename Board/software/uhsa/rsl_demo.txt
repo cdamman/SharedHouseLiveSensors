@@ -1,0 +1,225 @@
+<180f..>
+
+#include "sys/alt_stdio.h"
+#include "system.h"
+#include "altera_avalon_pio_regs.h"
+
+#define UHSA_ESCAPE '['
+#define UHSA_ESCAPE_END ']'
+
+char alt_getchar() {
+
+}
+
+alt_putchar(char c) {
+
+}
+
+
+
+void print_hex_char(int val) {
+	char tempchar;
+	tempchar = val + '0'; // 0..9 => 0x30..0x39
+	if (tempchar>'9') {
+		tempchar+= 39;
+	}
+	alt_putchar(tempchar);
+}
+
+
+
+
+int main()
+{ 
+  alt_putstr("UHSA R1.0\n\r");
+
+  char c = 0;				// First char received
+  char c0;
+  unsigned int b;		// c converted to hex nibble
+  char in_escape = 0;
+  char is_nibble = 0;
+  char done = 0;
+  unsigned int channel = 0;
+  unsigned char temp;
+
+
+
+  /* Event loop never exits. */
+  while (1) {
+	  	  if (done) {
+	  		c0 = 0;
+	  		done = 0;
+	  	  } else {
+	  		c0 = c;
+	  	  }
+
+		  c = alt_getchar();
+		  // pre-process HEX nibble in all cases for the case we need it
+		  is_nibble = 1;
+		  switch (c) {
+		  case '0':
+		  	  b = 0;
+			  break;
+		  case '1':
+		  	  b = 1;
+			  break;
+		  case '2':
+		  	  b = 2;
+			  break;
+		  case '3':
+		  	  b = 3;
+			  break;
+		  case '4':
+		  	  b = 4;
+			  break;
+		  case '5':
+		  	  b = 5;
+			  break;
+		  case '6':
+		  	  b = 6;
+			  break;
+		  case '7':
+		  	  b = 7;
+			  break;
+		  case '8':
+		  	  b = 8;
+			  break;
+		  case '9':
+		  	  b = 9;
+			  break;
+		  case 'a':
+		  	  b = 10;
+			  break;
+		  case 'b':
+		  	  b = 11;
+			  break;
+		  case 'c':
+		  	  b = 12;
+			  break;
+		  case 'd':
+		  	  b = 13;
+			  break;
+		  case 'e':
+		  	  b = 14;
+			  break;
+		  case 'f':
+		  	  b = 15;
+			  break;
+		  default:
+			  b = 0;
+			  is_nibble = 0;
+		  }
+		  // Escape processing first
+		  if (in_escape) {
+			  if (c==UHSA_ESCAPE_END) {
+				  in_escape = 0;
+				  done = 1;
+				  // processing done
+			  } else {
+				  if (c==UHSA_ESCAPE) {
+					  in_escape = 0;
+					  //done = 1;
+				  } else {
+					  // regular ESCAPE block processing
+					  if ((is_nibble) && (c0==UHSA_ESCAPE)) {
+						  channel = b;
+						  //alt_printf('{%u}',b);
+						  alt_putchar('{');
+  						  alt_putchar(channel + '0');
+  						  alt_putchar('}');
+
+					  } else {
+						  alt_putchar('(');
+						  alt_putchar(c);
+						  alt_putchar(')');
+					  }
+
+				  }
+			  }
+		  }
+
+		  if (!in_escape) {
+			  // Process normal stream after escape processing block
+			  if ((c==UHSA_ESCAPE) && (c0!=UHSA_ESCAPE)) {
+				  in_escape = 1;
+				  // processing done
+			  } else {
+				  // Process normally here we are not inside escape sequence
+				  if (!done) {
+					  switch (channel) {
+					  case 0:
+						  if (is_nibble) {
+							  //spi_xfer4(b);
+							  // collect 2 nibbles, save as address
+							  
+					                   counter++;
+							   if (counter < 2) {
+								   address <<= 4;
+								   address | = c; 
+							   }
+							   data <<= 4;
+							   data | = c; 
+							   if (counter = 4) {
+								// write data to address
+							   }
+	
+
+	                                                  // if 2 more nibbles come, write 1 byte to addr
+						  } else {
+							  switch (c) {
+							  case '.':
+								  counter++;	
+								   if (counter < =) {
+								  	  // read 1 byte
+
+								  	  print_hex_char(temp<<4);
+								  	  print_hex_char(temp);
+
+								   }
+								  break;
+							  case '<':
+								  // RESET nibble count = 0
+								  break;
+							  case '>':
+								  // 
+								  break;
+							  //default:
+							  }
+
+						  }
+						  break;
+					  case 1:
+						  if (is_nibble) {
+							  // set R as 4 bit in c
+						  }
+						  break;
+
+					  case 2:
+						  if (is_nibble) {
+							  // set R as 4 bit in c
+						  }
+						  break;
+
+					  case 3:
+						  if (is_nibble) {
+							  // set R as 4 bit in c
+						  }
+						  break;
+					  default:
+						  // undefined/unused channel
+						  alt_putchar('?');
+						  alt_putchar(c);
+						  					  }
+					  if (c==UHSA_ESCAPE) {
+						  done = 1;
+					  }
+				  }
+			  }
+		  }
+
+
+//  	  	  alt_putchar(c);
+  };
+
+  return 0;
+}
